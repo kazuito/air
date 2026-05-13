@@ -19,6 +19,7 @@ https://ai.router/<provider>?<params>
 | `q` / `p` / `prompt` | string | `""` | Prompt to send |
 | `m` / `mode` | `instant` \| `thinking` | _(unset)_ | Model class. When omitted, the current model selection is kept as-is. |
 | `session` | `new` \| `replace` \| `append` | `replace` | How to handle the tab and chat |
+| `send` | `true` \| `false` | `true` | When `false`, insert the prompt into the editor but don't click send (`false`/`0`/`no` are all accepted). |
 
 ### `session` behavior
 
@@ -45,7 +46,7 @@ The provider's automation script is injected via
 scripting.executeScript({ world: "MAIN" }):
   - Select model (skipped when mode is unset or followUp is true)
   - Insert prompt (document.execCommand + fallback)
-  - Click the send button
+  - Click the send button (skipped when send is false)
 ```
 
 ## Architecture

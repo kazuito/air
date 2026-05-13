@@ -4,6 +4,7 @@ export const automateGemini: AutomationFn = async ({
 	prompt,
 	mode,
 	followUp,
+	send,
 }) => {
 	const SELECTORS = {
 		modelTrigger: '[data-test-id="bard-mode-menu-button"]',
@@ -52,7 +53,8 @@ export const automateGemini: AutomationFn = async ({
 		editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
 	}
 
-	// 3. Send
+	// 3. Send (skip when send=false; prompt is left staged in the editor)
+	if (!send) return;
 	const sendBtn = await waitForElement<HTMLButtonElement>(SELECTORS.sendButton);
 	sendBtn.click();
 };

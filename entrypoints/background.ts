@@ -31,12 +31,13 @@ export default defineBackground(() => {
 			const prompt = readParam(url, "q", "p", "prompt") ?? "";
 			const mode = readMode(url);
 			const session = readSession(url);
+			const send = readSend(url);
 
-			console.log("[ai-router] handle", details.url, { session });
+			console.log("[ai-router] handle", details.url, { session, send });
 			void handleRouterNavigation(
 				details.tabId,
 				provider,
-				{ prompt, mode },
+				{ prompt, mode, send },
 				session,
 			);
 		},
@@ -182,6 +183,12 @@ function readMode(url: URL): Mode | undefined {
 	const raw = readParam(url, "m", "mode")?.toLowerCase();
 	if (raw === "instant" || raw === "thinking") return raw;
 	return undefined;
+}
+
+function readSend(url: URL): boolean {
+	const raw = readParam(url, "send")?.toLowerCase();
+	if (raw === "false" || raw === "0" || raw === "no") return false;
+	return true;
 }
 
 function normalizeKey(key: string): string {
