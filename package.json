@@ -15,10 +15,12 @@
 		"lint": "biome lint",
 		"format": "biome format --write",
 		"check": "biome check --write",
-		"postinstall": "wxt prepare"
+		"postinstall": "wxt prepare",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.15",
+		"husky": "^9.1.7",
 		"typescript": "^5.9.3",
 		"wxt": "^0.20.26"
 	}
