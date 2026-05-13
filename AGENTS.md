@@ -89,7 +89,5 @@ pnpm format       # biome format --write
 
 ## Constraints & known issues
 
-- The `ai.router` host doesn't resolve, so we intercept it in webNavigation before DNS. `https://` must be explicit — the URL bar treats bare input as a search query.
-- `triggerNewChatShortcut` dispatches a `KeyboardEvent` with `isTrusted: false`. Apps that check `isTrusted` will ignore it. Currently confirmed working on ChatGPT, Claude, and Gemini.
 - `document.execCommand("insertText")` is deprecated but remains the most reliable way to insert text into ProseMirror / Quill editors, so we keep using it.
 - Selectors are fragile against AI services' UI churn. When something breaks, update the relevant `lib/automation/<provider>.ts`.
