@@ -41,7 +41,8 @@ export default defineBackground(() => {
 		if (details.frameId !== 0) return;
 		const entry = pending.get(details.tabId);
 		if (!entry) return;
-		if (!details.url.startsWith(providers[entry.provider].origin)) return;
+		const expected = new URL(providers[entry.provider].origin).hostname;
+		if (new URL(details.url).hostname !== expected) return;
 
 		pending.delete(details.tabId);
 

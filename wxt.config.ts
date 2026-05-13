@@ -4,6 +4,11 @@ import { defineConfig } from "wxt";
 export default defineConfig({
 	manifest: {
 		permissions: ["webNavigation", "tabs", "scripting"],
-		host_permissions: ["*://ai.router/*", "https://chatgpt.com/*"],
+		host_permissions: [
+			"*://ai.router/*",
+			"https://chatgpt.com/*",
+			"https://claude.ai/*",
+			"https://gemini.google.com/*",
+		],
 	},
 });

@@ -1,4 +1,6 @@
 import { automateChatGPT } from "./chatgpt";
+import { automateClaude } from "./claude";
+import { automateGemini } from "./gemini";
 import type { ProviderConfig } from "./types";
 
 export const providers = {
@@ -6,10 +8,21 @@ export const providers = {
 		origin: "https://chatgpt.com/",
 		automate: automateChatGPT,
 	},
-	// claude: { origin: "https://claude.ai/", automate: automateClaude },
-	// gemini: { origin: "https://gemini.google.com/", automate: automateGemini },
+	claude: {
+		origin: "https://claude.ai/new",
+		automate: automateClaude,
+	},
+	gemini: {
+		origin: "https://gemini.google.com/app",
+		automate: automateGemini,
+	},
 } as const satisfies Record<string, ProviderConfig>;
 
 export type Provider = keyof typeof providers;
 
-export type { AutomationArgs, AutomationFn, Mode, ProviderConfig } from "./types";
+export type {
+	AutomationArgs,
+	AutomationFn,
+	Mode,
+	ProviderConfig,
+} from "./types";
