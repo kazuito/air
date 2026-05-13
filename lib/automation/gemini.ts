@@ -1,6 +1,10 @@
 import type { AutomationFn } from "./types";
 
-export const automateGemini: AutomationFn = async ({ prompt, mode }) => {
+export const automateGemini: AutomationFn = async ({
+	prompt,
+	mode,
+	followUp,
+}) => {
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
@@ -16,18 +20,20 @@ export const automateGemini: AutomationFn = async ({ prompt, mode }) => {
 		throw new Error(`Element not found: ${selector}`);
 	};
 
-	// 1. Select model
-	const itemSelector =
-		mode === "instant"
-			? '[data-test-id="bard-mode-option-fast"]'
-			: '[data-test-id="bard-mode-option-pro"]';
+	// 1. Select model (skip for follow-up — model is locked to existing chat)
+	if (!followUp) {
+		const itemSelector =
+			mode === "instant"
+				? '[data-test-id="bard-mode-option-fast"]'
+				: '[data-test-id="bard-mode-option-pro"]';
 
-	const trigger = await waitForElement<HTMLElement>(
-		'[data-test-id="bard-mode-menu-button"]',
-	);
-	trigger.click();
-	const item = await waitForElement<HTMLElement>(itemSelector);
-	item.click();
+		const trigger = await waitForElement<HTMLElement>(
+			'[data-test-id="bard-mode-menu-button"]',
+		);
+		trigger.click();
+		const item = await waitForElement<HTMLElement>(itemSelector);
+		item.click();
+	}
 
 	// 2. Input prompt into rich-textarea / Quill editor
 	const editor = await waitForElement<HTMLElement>(

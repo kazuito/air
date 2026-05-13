@@ -7,6 +7,9 @@ import {
 
 const ROUTER_HOST = "ai.router";
 
+type Session = "new" | "replace" | "append";
+const SESSION_VALUES = new Set<Session>(["new", "replace", "append"]);
+
 type PendingEntry = {
 	provider: Provider;
 	args: AutomationArgs;
@@ -25,12 +28,18 @@ export default defineBackground(() => {
 			const provider = resolveProvider(url);
 			if (!provider) return;
 
-			const prompt = readParam(url, ["q", "p", "prompt"]) ?? "";
+			const prompt = readParam(url, "q", "p", "prompt") ?? "";
 			const mode: Mode =
-				readParam(url, ["m", "mode"]) === "thinking" ? "thinking" : "instant";
+				readParam(url, "m", "mode") === "thinking" ? "thinking" : "instant";
+			const session = readSession(url);
 
-			console.log("[ai-router] handle", details.url);
-			void handleRouterNavigation(details.tabId, provider, { prompt, mode });
+			console.log("[ai-router] handle", details.url, { session });
+			void handleRouterNavigation(
+				details.tabId,
+				provider,
+				{ prompt, mode },
+				session,
+			);
 		},
 		{ url: [{ hostEquals: ROUTER_HOST }] },
 	);
@@ -55,9 +64,13 @@ async function handleRouterNavigation(
 	routerTabId: number,
 	provider: Provider,
 	args: AutomationArgs,
+	session: Session,
 ): Promise<void> {
 	const expectedHost = new URL(providers[provider].origin).hostname;
-	const existing = await findProviderTab(expectedHost, routerTabId);
+	const existing =
+		session === "new"
+			? undefined
+			: await findProviderTab(expectedHost, routerTabId);
 
 	if (!existing?.id) {
 		pending.set(routerTabId, { provider, args });
@@ -67,7 +80,7 @@ async function handleRouterNavigation(
 		return;
 	}
 
-	console.log("[ai-router] reuse tab", existing.id);
+	console.log("[ai-router] reuse tab", existing.id, session);
 
 	await browser.tabs.update(existing.id, { active: true });
 	if (existing.windowId != null) {
@@ -80,9 +93,12 @@ async function handleRouterNavigation(
 		// router tab may already be gone
 	}
 
-	await triggerNewChatShortcut(existing.id);
-	await sleep(200);
-	runAutomation(existing.id, provider, args);
+	const followUp = session === "append";
+	if (!followUp) {
+		await triggerNewChatShortcut(existing.id);
+		await sleep(200);
+	}
+	runAutomation(existing.id, provider, { ...args, followUp });
 }
 
 async function findProviderTab(
@@ -149,12 +165,22 @@ function sleep(ms: number): Promise<void> {
 	return new Promise((r) => setTimeout(r, ms));
 }
 
-function readParam(url: URL, keys: string[]): string | null {
-	for (const key of keys) {
-		const value = url.searchParams.get(key);
-		if (value != null) return value;
+function readParam(url: URL, ...aliases: string[]): string | null {
+	const wanted = new Set(aliases.map(normalizeKey));
+	for (const [key, value] of url.searchParams) {
+		if (wanted.has(normalizeKey(key))) return value;
 	}
 	return null;
+}
+
+function readSession(url: URL): Session {
+	const raw = readParam(url, "session")?.toLowerCase();
+	if (raw && SESSION_VALUES.has(raw as Session)) return raw as Session;
+	return "replace";
+}
+
+function normalizeKey(key: string): string {
+	return key.toLowerCase().replace(/[-_]/g, "");
 }
 
 function resolveProvider(url: URL): Provider | null {

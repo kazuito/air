@@ -1,6 +1,10 @@
 import type { AutomationFn } from "./types";
 
-export const automateClaude: AutomationFn = async ({ prompt, mode }) => {
+export const automateClaude: AutomationFn = async ({
+	prompt,
+	mode,
+	followUp,
+}) => {
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
@@ -16,22 +20,24 @@ export const automateClaude: AutomationFn = async ({ prompt, mode }) => {
 		throw new Error(`Element not found: ${selector}`);
 	};
 
-	// 1. Select model
-	const label = mode === "instant" ? "Sonnet" : "Opus";
-	const trigger = await waitForElement<HTMLElement>(
-		'[data-testid="model-selector-dropdown"]',
-	);
-	if (trigger.getAttribute("aria-expanded") !== "true") {
-		trigger.click();
+	// 1. Select model (skip for follow-up — model is locked to existing chat)
+	if (!followUp) {
+		const label = mode === "instant" ? "Sonnet" : "Opus";
+		const trigger = await waitForElement<HTMLElement>(
+			'[data-testid="model-selector-dropdown"]',
+		);
+		if (trigger.getAttribute("aria-expanded") !== "true") {
+			trigger.click();
+		}
+		await waitForElement('[role="menuitemradio"]');
+		const target = [
+			...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]'),
+		].find((item) => {
+			return item.textContent?.trim().includes(label);
+		});
+		if (!target) throw new Error(`Claude: menuitem "${label}" not found`);
+		target.click();
 	}
-	await waitForElement('[role="menuitemradio"]');
-	const target = [
-		...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]'),
-	].find((item) => {
-		return item.textContent?.trim().includes(label);
-	});
-	if (!target) throw new Error(`Claude: menuitem "${label}" not found`);
-	target.click();
 
 	// 2. Input prompt into ProseMirror editor
 	const editor = await waitForElement<HTMLElement>(

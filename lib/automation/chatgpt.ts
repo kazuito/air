@@ -1,6 +1,10 @@
 import type { AutomationFn } from "./types";
 
-export const automateChatGPT: AutomationFn = async ({ prompt, mode }) => {
+export const automateChatGPT: AutomationFn = async ({
+	prompt,
+	mode,
+	followUp,
+}) => {
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
@@ -40,20 +44,22 @@ export const automateChatGPT: AutomationFn = async ({ prompt, mode }) => {
 		}
 	};
 
-	// 1. Select model
-	const itemSelector =
-		mode === "instant"
-			? ".__menu-item[data-testid^='model-switcher-']:not([data-testid*='thinking'])"
-			: ".__menu-item[data-testid^='model-switcher-'][data-testid*='thinking']";
+	// 1. Select model (skip for follow-up — model is locked to existing chat)
+	if (!followUp) {
+		const itemSelector =
+			mode === "instant"
+				? ".__menu-item[data-testid^='model-switcher-']:not([data-testid*='thinking'])"
+				: ".__menu-item[data-testid^='model-switcher-'][data-testid*='thinking']";
 
-	const trigger = await waitForElement<HTMLElement>(
-		'[data-testid="model-switcher-dropdown-button"], button.__composer-pill',
-	);
-	if (trigger.getAttribute("data-state") !== "open") {
-		simulatePointerClick(trigger);
+		const trigger = await waitForElement<HTMLElement>(
+			'[data-testid="model-switcher-dropdown-button"], button.__composer-pill',
+		);
+		if (trigger.getAttribute("data-state") !== "open") {
+			simulatePointerClick(trigger);
+		}
+		const item = await waitForElement(itemSelector);
+		simulatePointerClick(item);
 	}
-	const item = await waitForElement(itemSelector);
-	simulatePointerClick(item);
 
 	// 2. Input prompt into ProseMirror editor
 	const editor = await waitForElement<HTMLElement>("#prompt-textarea");
