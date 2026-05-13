@@ -10,7 +10,6 @@ https://air/<provider>?<params>
 ```
 
 - `<provider>`: `chatgpt` | `claude` | `gemini` (declared in the `providers` registry at `lib/automation/index.ts`)
-- Parameter names are matched after normalization (**lowercase + strip `[-_]`**), so `newTab`, `new-tab`, `NEW_TAB`, etc. are all equivalent.
 
 ### Parameters
 

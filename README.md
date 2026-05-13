@@ -10,9 +10,8 @@ https://air/<provider>?<params>
 ```
 
 - `<provider>`: `chatgpt` | `claude` | `gemini`
-- Param names are matched after normalization (lowercase + strip `[-_]`), so `newTab`, `new-tab`, `NEW_TAB` all work.
 
-| Key (aliases) | Values | Default | Description |
+| Key | Values | Default | Description |
 |---|---|---|---|
 | `q` / `p` / `prompt` | string | `""` | Prompt to send |
 | `mode` | `instant` \| `thinking` | _(unset)_ | Model class. When omitted, the current model is kept as-is. |
