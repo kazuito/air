@@ -1,7 +1,7 @@
-# AI Router
+# AIR — AI Router for Browser
 
-A Chrome extension that sends prompts to AI chat sites (ChatGPT / Claude / Gemini).
-Built with WXT + TypeScript. Designed for hitting AI chats from external tools like Raycast via a single URL.
+A Chrome extension that routes prompts to AI chat sites (ChatGPT / Claude / Gemini) from a single URL.
+Built with WXT + TypeScript. Designed for hitting AI chats from external tools like Raycast.
 
 ## URL Scheme
 

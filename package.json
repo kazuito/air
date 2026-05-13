@@ -1,8 +1,8 @@
 {
-	"name": "wxt-starter",
+	"name": "air",
 	"version": "0.0.0",
 	"private": true,
-	"description": "manifest.json description",
+	"description": "AIR — AI Router for Browser. Route prompts to ChatGPT / Claude / Gemini from a single URL.",
 	"type": "module",
 	"scripts": {
 		"dev": "wxt",
