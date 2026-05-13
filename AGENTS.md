@@ -17,7 +17,7 @@ https://ai.router/<provider>?<params>
 | Key (aliases) | Values | Default | Description |
 |---|---|---|---|
 | `q` / `p` / `prompt` | string | `""` | Prompt to send |
-| `m` / `mode` | `instant` \| `thinking` | `instant` | Model class (instant = fast model, thinking = reasoning model) |
+| `m` / `mode` | `instant` \| `thinking` | _(unset)_ | Model class. When omitted, the current model selection is kept as-is. |
 | `session` | `new` \| `replace` \| `append` | `replace` | How to handle the tab and chat |
 
 ### `session` behavior
@@ -43,7 +43,7 @@ Branch based on session:
   ↓
 The provider's automation script is injected via
 scripting.executeScript({ world: "MAIN" }):
-  - Select model (skipped when followUp is set)
+  - Select model (skipped when mode is unset or followUp is true)
   - Insert prompt (document.execCommand + fallback)
   - Click the send button
 ```

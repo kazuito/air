@@ -44,8 +44,8 @@ export const automateChatGPT: AutomationFn = async ({
 		}
 	};
 
-	// 1. Select model (skip for follow-up — model is locked to existing chat)
-	if (!followUp) {
+	// 1. Select model (skip when mode is unspecified, or for follow-up — model is locked to existing chat)
+	if (mode && !followUp) {
 		const itemSelector =
 			mode === "instant"
 				? ".__menu-item[data-testid^='model-switcher-']:not([data-testid*='thinking'])"

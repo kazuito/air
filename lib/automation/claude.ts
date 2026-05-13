@@ -20,8 +20,8 @@ export const automateClaude: AutomationFn = async ({
 		throw new Error(`Element not found: ${selector}`);
 	};
 
-	// 1. Select model (skip for follow-up — model is locked to existing chat)
-	if (!followUp) {
+	// 1. Select model (skip when mode is unspecified, or for follow-up — model is locked to existing chat)
+	if (mode && !followUp) {
 		const label = mode === "instant" ? "Sonnet" : "Opus";
 		const trigger = await waitForElement<HTMLElement>(
 			'[data-testid="model-selector-dropdown"]',

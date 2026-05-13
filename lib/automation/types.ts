@@ -2,7 +2,7 @@ export type Mode = "instant" | "thinking";
 
 export type AutomationArgs = {
 	prompt: string;
-	mode: Mode;
+	mode?: Mode;
 	followUp?: boolean;
 };
 
