@@ -5,6 +5,20 @@ export const automateClaude: AutomationFn = async ({
 	mode,
 	followUp,
 }) => {
+	const SELECTORS = {
+		modelTrigger: '[data-testid="model-selector-dropdown"]',
+		modelMenuItem: '[role="menuitemradio"]',
+		editor:
+			'div[contenteditable="true"].ProseMirror, div[contenteditable="true"]',
+		sendButton:
+			'button[aria-label="Send message"]:not([disabled]):not([aria-disabled="true"]), button[aria-label="Send Message"]:not([disabled]):not([aria-disabled="true"])',
+	} as const;
+
+	const MODEL_LABEL = {
+		instant: "Sonnet",
+		thinking: "Opus",
+	} as const;
+
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
@@ -22,16 +36,14 @@ export const automateClaude: AutomationFn = async ({
 
 	// 1. Select model (skip when mode is unspecified, or for follow-up — model is locked to existing chat)
 	if (mode && !followUp) {
-		const label = mode === "instant" ? "Sonnet" : "Opus";
-		const trigger = await waitForElement<HTMLElement>(
-			'[data-testid="model-selector-dropdown"]',
-		);
+		const label = MODEL_LABEL[mode];
+		const trigger = await waitForElement<HTMLElement>(SELECTORS.modelTrigger);
 		if (trigger.getAttribute("aria-expanded") !== "true") {
 			trigger.click();
 		}
-		await waitForElement('[role="menuitemradio"]');
+		await waitForElement(SELECTORS.modelMenuItem);
 		const target = [
-			...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]'),
+			...document.querySelectorAll<HTMLElement>(SELECTORS.modelMenuItem),
 		].find((item) => {
 			return item.textContent?.trim().includes(label);
 		});
@@ -40,9 +52,7 @@ export const automateClaude: AutomationFn = async ({
 	}
 
 	// 2. Input prompt into ProseMirror editor
-	const editor = await waitForElement<HTMLElement>(
-		'div[contenteditable="true"].ProseMirror, div[contenteditable="true"]',
-	);
+	const editor = await waitForElement<HTMLElement>(SELECTORS.editor);
 	editor.focus();
 	const inserted = document.execCommand("insertText", false, prompt);
 	if (!inserted) {
@@ -51,8 +61,6 @@ export const automateClaude: AutomationFn = async ({
 	}
 
 	// 3. Send
-	const sendBtn = await waitForElement<HTMLButtonElement>(
-		'button[aria-label="Send message"]:not([disabled]):not([aria-disabled="true"]), button[aria-label="Send Message"]:not([disabled]):not([aria-disabled="true"])',
-	);
+	const sendBtn = await waitForElement<HTMLButtonElement>(SELECTORS.sendButton);
 	sendBtn.click();
 };

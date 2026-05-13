@@ -5,7 +5,8 @@ export default defineConfig({
 	manifest: {
 		name: "AIR — AI Router for Browser",
 		short_name: "AIR",
-		description: "Route prompts to ChatGPT / Claude / Gemini from a single URL.",
+		description:
+			"Route prompts to ChatGPT / Claude / Gemini from a single URL.",
 		permissions: ["webNavigation", "tabs", "scripting"],
 		host_permissions: [
 			"*://ai.router/*",

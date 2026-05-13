@@ -5,6 +5,18 @@ export const automateChatGPT: AutomationFn = async ({
 	mode,
 	followUp,
 }) => {
+	const SELECTORS = {
+		modelTrigger:
+			'[data-testid="model-switcher-dropdown-button"], button.__composer-pill',
+		modelItemInstant:
+			".__menu-item[data-testid^='model-switcher-']:not([data-testid*='thinking'])",
+		modelItemThinking:
+			".__menu-item[data-testid^='model-switcher-'][data-testid*='thinking']",
+		editor: "#prompt-textarea",
+		sendButton:
+			'[data-testid="send-button"]:not([disabled]):not([aria-disabled="true"])',
+	} as const;
+
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
@@ -48,12 +60,10 @@ export const automateChatGPT: AutomationFn = async ({
 	if (mode && !followUp) {
 		const itemSelector =
 			mode === "instant"
-				? ".__menu-item[data-testid^='model-switcher-']:not([data-testid*='thinking'])"
-				: ".__menu-item[data-testid^='model-switcher-'][data-testid*='thinking']";
+				? SELECTORS.modelItemInstant
+				: SELECTORS.modelItemThinking;
 
-		const trigger = await waitForElement<HTMLElement>(
-			'[data-testid="model-switcher-dropdown-button"], button.__composer-pill',
-		);
+		const trigger = await waitForElement<HTMLElement>(SELECTORS.modelTrigger);
 		if (trigger.getAttribute("data-state") !== "open") {
 			simulatePointerClick(trigger);
 		}
@@ -62,7 +72,7 @@ export const automateChatGPT: AutomationFn = async ({
 	}
 
 	// 2. Input prompt into ProseMirror editor
-	const editor = await waitForElement<HTMLElement>("#prompt-textarea");
+	const editor = await waitForElement<HTMLElement>(SELECTORS.editor);
 	editor.focus();
 	const inserted = document.execCommand("insertText", false, prompt);
 	if (!inserted) {
@@ -71,8 +81,6 @@ export const automateChatGPT: AutomationFn = async ({
 	}
 
 	// 3. Send
-	const sendBtn = await waitForElement<HTMLButtonElement>(
-		'[data-testid="send-button"]:not([disabled]):not([aria-disabled="true"])',
-	);
+	const sendBtn = await waitForElement<HTMLButtonElement>(SELECTORS.sendButton);
 	simulatePointerClick(sendBtn);
 };

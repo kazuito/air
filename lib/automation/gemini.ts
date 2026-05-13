@@ -5,6 +5,16 @@ export const automateGemini: AutomationFn = async ({
 	mode,
 	followUp,
 }) => {
+	const SELECTORS = {
+		modelTrigger: '[data-test-id="bard-mode-menu-button"]',
+		modelItemInstant: '[data-test-id="bard-mode-option-fast"]',
+		modelItemThinking: '[data-test-id="bard-mode-option-pro"]',
+		editor:
+			'rich-textarea [contenteditable="true"], .ql-editor[contenteditable="true"]',
+		sendButton:
+			'button[aria-label="Send message"]:not([disabled]):not([aria-disabled="true"]), button.send-button:not([disabled]):not([aria-disabled="true"])',
+	} as const;
+
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
@@ -24,21 +34,17 @@ export const automateGemini: AutomationFn = async ({
 	if (mode && !followUp) {
 		const itemSelector =
 			mode === "instant"
-				? '[data-test-id="bard-mode-option-fast"]'
-				: '[data-test-id="bard-mode-option-pro"]';
+				? SELECTORS.modelItemInstant
+				: SELECTORS.modelItemThinking;
 
-		const trigger = await waitForElement<HTMLElement>(
-			'[data-test-id="bard-mode-menu-button"]',
-		);
+		const trigger = await waitForElement<HTMLElement>(SELECTORS.modelTrigger);
 		trigger.click();
 		const item = await waitForElement<HTMLElement>(itemSelector);
 		item.click();
 	}
 
 	// 2. Input prompt into rich-textarea / Quill editor
-	const editor = await waitForElement<HTMLElement>(
-		'rich-textarea [contenteditable="true"], .ql-editor[contenteditable="true"]',
-	);
+	const editor = await waitForElement<HTMLElement>(SELECTORS.editor);
 	editor.focus();
 	const inserted = document.execCommand("insertText", false, prompt);
 	if (!inserted) {
@@ -47,8 +53,6 @@ export const automateGemini: AutomationFn = async ({
 	}
 
 	// 3. Send
-	const sendBtn = await waitForElement<HTMLButtonElement>(
-		'button[aria-label="Send message"]:not([disabled]):not([aria-disabled="true"]), button.send-button:not([disabled]):not([aria-disabled="true"])',
-	);
+	const sendBtn = await waitForElement<HTMLButtonElement>(SELECTORS.sendButton);
 	sendBtn.click();
 };
