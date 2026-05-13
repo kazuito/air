@@ -6,7 +6,7 @@ Built with [WXT](https://wxt.dev) + TypeScript. Designed for firing off AI chats
 ## URL scheme
 
 ```
-https://ai.router/<provider>?<params>
+https://air/<provider>?<params>
 ```
 
 - `<provider>`: `chatgpt` | `claude` | `gemini`

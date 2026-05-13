@@ -9,7 +9,7 @@ export default defineConfig({
 			"Route prompts to ChatGPT / Claude / Gemini from a single URL.",
 		permissions: ["webNavigation", "tabs", "scripting"],
 		host_permissions: [
-			"*://ai.router/*",
+			"*://air/*",
 			"https://chatgpt.com/*",
 			"https://claude.ai/*",
 			"https://gemini.google.com/*",

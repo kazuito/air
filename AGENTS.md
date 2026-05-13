@@ -6,7 +6,7 @@ Built with WXT + TypeScript. Designed for hitting AI chats from external tools l
 ## URL Scheme
 
 ```
-https://ai.router/<provider>?<params>
+https://air/<provider>?<params>
 ```
 
 - `<provider>`: `chatgpt` | `claude` | `gemini` (declared in the `providers` registry at `lib/automation/index.ts`)
@@ -30,16 +30,16 @@ https://ai.router/<provider>?<params>
 ## Flow
 
 ```
-User navigates to https://ai.router/<provider>?q=...
+User navigates to https://air/<provider>?q=...
   ↓
 background's webNavigation.onBeforeNavigate fires
   ↓
 Branch based on session:
   ├─ Reusing an existing tab
   │    focus → (replace only: cmd+shift+o for new chat) → run automation
-  │    The ai.router tab is closed
+  │    The air tab is closed
   └─ New tab
-       Redirect the ai.router tab to the provider origin
+       Redirect the air tab to the provider origin
        Run automation on webNavigation.onCompleted
   ↓
 The provider's automation script is injected via

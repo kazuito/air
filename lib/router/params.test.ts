@@ -8,8 +8,8 @@ import {
 	resolveProvider,
 } from "./params";
 
-const u = (qs: string) => new URL(`https://ai.router/chatgpt${qs}`);
-const provider = (path: string) => new URL(`https://ai.router/${path}`);
+const u = (qs: string) => new URL(`https://air/chatgpt${qs}`);
+const provider = (path: string) => new URL(`https://air/${path}`);
 
 describe("normalizeKey", () => {
 	it("lowercases and strips dashes/underscores", () => {

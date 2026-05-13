@@ -1,6 +1,6 @@
 import { type Mode, type Provider, providers } from "@/lib/automation";
 
-export const ROUTER_HOST = "ai.router";
+export const ROUTER_HOST = "air";
 
 export type Session = "new" | "replace" | "append";
 const SESSION_VALUES = new Set<Session>(["new", "replace", "append"]);
