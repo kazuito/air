@@ -1,11 +1,18 @@
+import {
+	type AutomationArgs,
+	type Mode,
+	type Provider,
+	providers,
+} from "@/lib/automation";
+
 const ROUTER_HOST = "ai.router";
 
-type PendingPrompt = {
-	target: string;
-	prompt: string;
+type PendingEntry = {
+	provider: Provider;
+	args: AutomationArgs;
 };
 
-const pending = new Map<number, PendingPrompt>();
+const pending = new Map<number, PendingEntry>();
 
 export default defineBackground(() => {
 	browser.webNavigation.onBeforeNavigate.addListener(
@@ -15,12 +22,15 @@ export default defineBackground(() => {
 			const url = new URL(details.url);
 			if (url.hostname !== ROUTER_HOST) return;
 
-			const target = route(url);
-			if (!target) return;
+			const provider = resolveProvider(url);
+			if (!provider) return;
 
 			const prompt = url.searchParams.get("q") ?? "";
-			pending.set(details.tabId, { target, prompt });
+			const mode: Mode =
+				url.searchParams.get("m") === "thinking" ? "thinking" : "instant";
+			pending.set(details.tabId, { provider, args: { prompt, mode } });
 
+			const target = providers[provider].origin;
 			console.log("[ai-router] redirect", details.url, "->", target);
 			browser.tabs.update(details.tabId, { url: target });
 		},
@@ -31,16 +41,15 @@ export default defineBackground(() => {
 		if (details.frameId !== 0) return;
 		const entry = pending.get(details.tabId);
 		if (!entry) return;
-		if (!details.url.startsWith(entry.target)) return;
+		if (!details.url.startsWith(providers[entry.provider].origin)) return;
 
 		pending.delete(details.tabId);
 
 		browser.scripting.executeScript({
 			target: { tabId: details.tabId },
-			func: (prompt: string) => {
-				alert(prompt);
-			},
-			args: [entry.prompt],
+			func: providers[entry.provider].automate,
+			args: [entry.args],
+			world: "MAIN",
 		});
 	});
 
@@ -49,12 +58,7 @@ export default defineBackground(() => {
 	});
 });
 
-function route(url: URL): string | null {
+function resolveProvider(url: URL): Provider | null {
 	const path = url.pathname.replace(/^\/+/, "").toLowerCase();
-	switch (path) {
-		case "chatgpt":
-			return "https://chatgpt.com/";
-		default:
-			return null;
-	}
+	return path in providers ? (path as Provider) : null;
 }
