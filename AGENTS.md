@@ -1,94 +1,95 @@
 # AI Router
 
-ChatGPT / Claude / Gemini など AI チャット系ウェブサイトに対してプロンプトを送信する Chrome 拡張。
-WXT + TypeScript。Raycast など外部ツールから URL 一発で AI チャットに送れる用途を想定。
+A Chrome extension that sends prompts to AI chat sites (ChatGPT / Claude / Gemini).
+Built with WXT + TypeScript. Designed for hitting AI chats from external tools like Raycast via a single URL.
 
-## URL スキーム
+## URL Scheme
 
 ```
 https://ai.router/<provider>?<params>
 ```
 
-- `<provider>`: `chatgpt` | `claude` | `gemini`（`lib/automation/index.ts` の `providers` レジストリで定義）
-- パラメータ名は **lowercase + `[-_]` 除去** で正規化マッチ（`newTab`, `new-tab`, `NEW_TAB` などすべて同じ）
+- `<provider>`: `chatgpt` | `claude` | `gemini` (declared in the `providers` registry at `lib/automation/index.ts`)
+- Parameter names are matched after normalization (**lowercase + strip `[-_]`**), so `newTab`, `new-tab`, `NEW_TAB`, etc. are all equivalent.
 
-### パラメータ
+### Parameters
 
-| キー (alias) | 値 | デフォルト | 説明 |
+| Key (aliases) | Values | Default | Description |
 |---|---|---|---|
-| `q` / `p` / `prompt` | string | `""` | 送信するプロンプト |
-| `m` / `mode` | `instant` \| `thinking` | `instant` | モデルの種類 (instant: 速いモデル / thinking: 推論モデル) |
-| `session` | `new` \| `replace` \| `append` | `replace` | タブとチャットの扱い |
+| `q` / `p` / `prompt` | string | `""` | Prompt to send |
+| `m` / `mode` | `instant` \| `thinking` | `instant` | Model class (instant = fast model, thinking = reasoning model) |
+| `session` | `new` \| `replace` \| `append` | `replace` | How to handle the tab and chat |
 
-### `session` の挙動
+### `session` behavior
 
-- `new`: 既存タブを探さず、常に新規タブで新規チャット
-- `replace`: 既存タブがあれば focus + cmd/ctrl+shift+o で新規チャット。なければ新規タブ
-- `append`: 既存タブがあれば現在のチャットへフォローアップ送信。なければ新規タブで新規チャット
+- `new`: Skip the existing-tab lookup; always open a new tab with a new chat.
+- `replace`: Reuse an existing tab if present (focus it + cmd/ctrl+shift+o to start a new chat); otherwise open a new tab.
+- `append`: Reuse an existing tab as a follow-up to its current chat; otherwise open a new tab with a new chat.
 
-## 動作フロー
+## Flow
 
 ```
-ユーザが https://ai.router/<provider>?q=... へナビゲート
+User navigates to https://ai.router/<provider>?q=...
   ↓
-background の webNavigation.onBeforeNavigate が検知
+background's webNavigation.onBeforeNavigate fires
   ↓
-session に応じて分岐:
-  ├─ 既存タブを再利用する場合
-  │    focus → (replace: cmd+shift+o で新規チャット) → automation 実行
-  │    ai.router タブは閉じる
-  └─ 新規タブの場合
-       ai.router タブを provider origin にリダイレクト
-       webNavigation.onCompleted で automation 実行
+Branch based on session:
+  ├─ Reusing an existing tab
+  │    focus → (replace only: cmd+shift+o for new chat) → run automation
+  │    The ai.router tab is closed
+  └─ New tab
+       Redirect the ai.router tab to the provider origin
+       Run automation on webNavigation.onCompleted
   ↓
-provider 別 automation スクリプトを `scripting.executeScript({ world: "MAIN" })` で注入
-  - モデル選択 (followUp 時はスキップ)
-  - プロンプト入力 (document.execCommand + フォールバック)
-  - 送信ボタンクリック
+The provider's automation script is injected via
+scripting.executeScript({ world: "MAIN" }):
+  - Select model (skipped when followUp is set)
+  - Insert prompt (document.execCommand + fallback)
+  - Click the send button
 ```
 
-## アーキテクチャ
+## Architecture
 
 ```
 entrypoints/
-  background.ts         ルーティング / タブ管理 / dispatch
+  background.ts         Routing / tab management / dispatch
 lib/automation/
   types.ts              Mode / AutomationArgs / AutomationFn / ProviderConfig
-  index.ts              providers レジストリ (origin + automate のマップ)
-  chatgpt.ts            ChatGPT 自動化 (self-contained)
-  claude.ts             Claude 自動化 (self-contained)
-  gemini.ts             Gemini 自動化 (self-contained)
+  index.ts              providers registry (origin + automate map)
+  chatgpt.ts            ChatGPT automation (self-contained)
+  claude.ts             Claude automation (self-contained)
+  gemini.ts             Gemini automation (self-contained)
 ```
 
-### automation スクリプトの注意点
+### Automation script constraints
 
-- `chrome.scripting.executeScript({ func })` は関数を `.toString()` でシリアライズしてページの MAIN world で実行する。**helpers は必ず関数内で定義する**こと（外部参照は注入時に undefined になる）
-- 各プロバイダ毎に `sleep` / `waitForElement` / `simulatePointerClick` を関数内で重複定義しているのは上記制約のため
-- セレクタは各サービスの UI 更新で壊れやすいので DevTools で `data-testid` / `aria-label` を確認して調整する
+- `chrome.scripting.executeScript({ func })` serializes the function via `.toString()` and runs it in the page's MAIN world. **Helpers must be defined inside the function** — outer references resolve to `undefined` at injection time.
+- That's why `sleep` / `waitForElement` / `simulatePointerClick` are duplicated inside each provider's function.
+- Selectors break easily when the target service ships UI changes. Verify `data-testid` / `aria-label` in DevTools and adjust.
 
-### 新プロバイダの追加手順
+### Adding a new provider
 
-1. `lib/automation/<name>.ts` を作って `automate<Name>: AutomationFn` を実装
-   - 必ず self-contained に書く (helpers は関数内)
-   - `mode` (instant/thinking) と `followUp` を引数で受け取る
-2. `lib/automation/index.ts` の `providers` に `<name>: { origin, automate }` を追加
-3. `wxt.config.ts` の `host_permissions` に対象オリジンを追加
-4. `Provider` 型は `keyof typeof providers` から自動導出されるため他の変更は不要
+1. Create `lib/automation/<name>.ts` exporting `automate<Name>: AutomationFn`.
+   - Keep it self-contained (helpers inside the function).
+   - Accept `mode` (instant/thinking) and `followUp` as arguments.
+2. Register `<name>: { origin, automate }` in the `providers` map at `lib/automation/index.ts`.
+3. Add the target origin to `host_permissions` in `wxt.config.ts`.
+4. The `Provider` type is derived as `keyof typeof providers`, so no other changes are needed.
 
-## 開発コマンド
+## Dev commands
 
 ```bash
-pnpm dev          # Chrome 用 dev 起動 (拡張ホットリロード)
-pnpm build        # Chrome 用ビルド
+pnpm dev          # Run Chrome dev build with hot reload
+pnpm build        # Production build for Chrome
 pnpm typecheck    # tsc --noEmit
 pnpm lint         # biome lint
 pnpm check        # biome check --write (lint + format + import sort)
 pnpm format       # biome format --write
 ```
 
-## 制約・既知の問題
+## Constraints & known issues
 
-- ホスト `ai.router` は実在しないため DNS 解決前に webNavigation で割り込む形。`https://` を明示する必要あり (アドレスバーから入力すると検索になりがち)
-- `triggerNewChatShortcut` が dispatch する `KeyboardEvent` は `isTrusted: false`。アプリ側が trusted チェックしていると無視される。現状 ChatGPT/Claude/Gemini では動作確認済み
-- `document.execCommand("insertText")` は deprecated だが ProseMirror / Quill 系エディタへの入力としては最も確実なので使用継続
-- セレクタは AI サービス側の UI 改修で壊れることがある。動かなくなったら各 `lib/automation/<provider>.ts` を更新
+- The `ai.router` host doesn't resolve, so we intercept it in webNavigation before DNS. `https://` must be explicit — the URL bar treats bare input as a search query.
+- `triggerNewChatShortcut` dispatches a `KeyboardEvent` with `isTrusted: false`. Apps that check `isTrusted` will ignore it. Currently confirmed working on ChatGPT, Claude, and Gemini.
+- `document.execCommand("insertText")` is deprecated but remains the most reliable way to insert text into ProseMirror / Quill editors, so we keep using it.
+- Selectors are fragile against AI services' UI churn. When something breaks, update the relevant `lib/automation/<provider>.ts`.
