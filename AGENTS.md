@@ -54,6 +54,9 @@ scripting.executeScript({ world: "MAIN" }):
 ```
 entrypoints/
   background.ts         Routing / tab management / dispatch
+lib/router/
+  params.ts             Pure URL-param parsers (readMode/readSend/readSession/...)
+  params.test.ts        Vitest unit tests for the parsers
 lib/automation/
   types.ts              Mode / AutomationArgs / AutomationFn / ProviderConfig
   index.ts              providers registry (origin + automate map)
@@ -83,6 +86,8 @@ lib/automation/
 pnpm dev          # Run Chrome dev build with hot reload
 pnpm build        # Production build for Chrome
 pnpm typecheck    # tsc --noEmit
+pnpm test         # vitest run (unit tests for lib/router)
+pnpm test:watch   # vitest watch mode
 pnpm lint         # biome lint
 pnpm check        # biome check --write (lint + format + import sort)
 pnpm format       # biome format --write

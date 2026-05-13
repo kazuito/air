@@ -1,14 +1,17 @@
 import {
 	type AutomationArgs,
-	type Mode,
 	type Provider,
 	providers,
 } from "@/lib/automation";
-
-const ROUTER_HOST = "ai.router";
-
-type Session = "new" | "replace" | "append";
-const SESSION_VALUES = new Set<Session>(["new", "replace", "append"]);
+import {
+	ROUTER_HOST,
+	readMode,
+	readParam,
+	readSend,
+	readSession,
+	resolveProvider,
+	type Session,
+} from "@/lib/router/params";
 
 type PendingEntry = {
 	provider: Provider;
@@ -163,39 +166,4 @@ async function triggerNewChatShortcut(tabId: number): Promise<void> {
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((r) => setTimeout(r, ms));
-}
-
-function readParam(url: URL, ...aliases: string[]): string | null {
-	const wanted = new Set(aliases.map(normalizeKey));
-	for (const [key, value] of url.searchParams) {
-		if (wanted.has(normalizeKey(key))) return value;
-	}
-	return null;
-}
-
-function readSession(url: URL): Session {
-	const raw = readParam(url, "session")?.toLowerCase();
-	if (raw && SESSION_VALUES.has(raw as Session)) return raw as Session;
-	return "replace";
-}
-
-function readMode(url: URL): Mode | undefined {
-	const raw = readParam(url, "m", "mode")?.toLowerCase();
-	if (raw === "instant" || raw === "thinking") return raw;
-	return undefined;
-}
-
-function readSend(url: URL): boolean {
-	const raw = readParam(url, "send")?.toLowerCase();
-	if (raw === "false" || raw === "0" || raw === "no") return false;
-	return true;
-}
-
-function normalizeKey(key: string): string {
-	return key.toLowerCase().replace(/[-_]/g, "");
-}
-
-function resolveProvider(url: URL): Provider | null {
-	const path = url.pathname.replace(/^\/+/, "").toLowerCase();
-	return path in providers ? (path as Provider) : null;
 }

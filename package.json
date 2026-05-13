@@ -12,6 +12,8 @@
 		"zip": "wxt zip",
 		"zip:firefox": "wxt zip -b firefox",
 		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"lint": "biome lint",
 		"format": "biome format --write",
 		"check": "biome check --write",
@@ -22,6 +24,7 @@
 		"@biomejs/biome": "2.4.15",
 		"husky": "^9.1.7",
 		"typescript": "^5.9.3",
+		"vitest": "^4.1.6",
 		"wxt": "^0.20.26"
 	}
 }
