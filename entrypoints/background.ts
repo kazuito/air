@@ -25,9 +25,9 @@ export default defineBackground(() => {
 			const provider = resolveProvider(url);
 			if (!provider) return;
 
-			const prompt = url.searchParams.get("q") ?? "";
+			const prompt = readParam(url, ["q", "p", "prompt"]) ?? "";
 			const mode: Mode =
-				url.searchParams.get("m") === "thinking" ? "thinking" : "instant";
+				readParam(url, ["m", "mode"]) === "thinking" ? "thinking" : "instant";
 
 			console.log("[ai-router] handle", details.url);
 			void handleRouterNavigation(details.tabId, provider, { prompt, mode });
@@ -147,6 +147,14 @@ async function triggerNewChatShortcut(tabId: number): Promise<void> {
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((r) => setTimeout(r, ms));
+}
+
+function readParam(url: URL, keys: string[]): string | null {
+	for (const key of keys) {
+		const value = url.searchParams.get(key);
+		if (value != null) return value;
+	}
+	return null;
 }
 
 function resolveProvider(url: URL): Provider | null {
