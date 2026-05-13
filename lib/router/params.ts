@@ -24,7 +24,7 @@ export function readSession(url: URL): Session {
 }
 
 export function readMode(url: URL): Mode | undefined {
-	const raw = readParam(url, "m", "mode")?.toLowerCase();
+	const raw = readParam(url, "mode")?.toLowerCase();
 	if (raw === "instant" || raw === "thinking") return raw;
 	return undefined;
 }

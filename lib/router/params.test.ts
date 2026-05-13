@@ -56,11 +56,11 @@ describe("readMode", () => {
 	it("returns instant / thinking for valid values, case-insensitive", () => {
 		expect(readMode(u("?mode=instant"))).toBe("instant");
 		expect(readMode(u("?mode=THINKING"))).toBe("thinking");
-		expect(readMode(u("?m=Instant"))).toBe("instant");
+		expect(readMode(u("?MODE=Instant"))).toBe("instant");
 	});
 
-	it("accepts the short alias `m`", () => {
-		expect(readMode(u("?m=thinking"))).toBe("thinking");
+	it("does not treat `m` as an alias", () => {
+		expect(readMode(u("?m=thinking"))).toBeUndefined();
 	});
 
 	it("returns undefined for unknown values rather than falling back", () => {

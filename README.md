@@ -15,7 +15,7 @@ https://air/<provider>?<params>
 | Key (aliases) | Values | Default | Description |
 |---|---|---|---|
 | `q` / `p` / `prompt` | string | `""` | Prompt to send |
-| `m` / `mode` | `instant` \| `thinking` | _(unset)_ | Model class. When omitted, the current model is kept as-is. |
+| `mode` | `instant` \| `thinking` | _(unset)_ | Model class. When omitted, the current model is kept as-is. |
 | `session` | `new` \| `replace` \| `append` | `replace` | Tab/chat reuse strategy |
 | `send` | `true` \| `false` | `true` | When `false`, fills the editor but doesn't press send. |
 
