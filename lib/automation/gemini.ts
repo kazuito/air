@@ -8,8 +8,10 @@ export const automateGemini: AutomationFn = async ({
 }) => {
 	const SELECTORS = {
 		modelTrigger: '[data-test-id="bard-mode-menu-button"]',
-		modelItemInstant: '[data-test-id="bard-mode-option-fast"]',
-		modelItemThinking: '[data-test-id="bard-mode-option-pro"]',
+		modelItemInstant:
+			'[data-test-id="gem-mode-menu"] > gem-menu-item:nth-child(2)',
+		modelItemThinking:
+			'[data-test-id="gem-mode-menu"] > gem-menu-item:nth-child(3)',
 		editor:
 			'rich-textarea [contenteditable="true"], .ql-editor[contenteditable="true"]',
 		sendButton:
