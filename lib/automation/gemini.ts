@@ -6,48 +6,64 @@ export const automateGemini: AutomationFn = async ({
 	followUp,
 	send,
 }) => {
-	const SELECTORS = {
-		modelTrigger: '[data-test-id="bard-mode-menu-button"]',
-		modelItemInstant:
-			'[data-test-id="gem-mode-menu"] > gem-menu-item:nth-child(2)',
-		modelItemThinking:
-			'[data-test-id="gem-mode-menu"] > gem-menu-item:nth-child(3)',
-		editor:
-			'rich-textarea [contenteditable="true"], .ql-editor[contenteditable="true"]',
-		sendButton:
-			'button[aria-label="Send message"]:not([disabled]):not([aria-disabled="true"]), button.send-button:not([disabled]):not([aria-disabled="true"])',
-	} as const;
+	const getters = {
+		modelTrigger: () =>
+			document.querySelector<HTMLElement>(
+				'[data-test-id="bard-mode-menu-button"]',
+			),
+		modelItemInstant: () =>
+			Array.from(
+				document.querySelectorAll<HTMLElement>(
+					'[data-test-id="gem-mode-menu"] > gem-menu-item',
+				),
+			).find(
+				(el) =>
+					el.textContent.includes("Flash") && !el.textContent.includes("Lite"),
+			),
+		modelItemThinking: () =>
+			Array.from(
+				document.querySelectorAll<HTMLElement>(
+					'[data-test-id="gem-mode-menu"] > gem-menu-item',
+				),
+			).find((el) => el.textContent.includes("Pro")),
+		editor: () =>
+			document.querySelector<HTMLElement>(
+				'rich-textarea [contenteditable="true"], .ql-editor[contenteditable="true"]',
+			),
+		sendButton: () =>
+			document.querySelector<HTMLButtonElement>(
+				'button[aria-label="Send message"]:not([disabled]):not([aria-disabled="true"]), button.send-button:not([disabled]):not([aria-disabled="true"])',
+			),
+	};
 
 	const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	const waitForElement = async <T extends Element = Element>(
-		selector: string,
+		getter: () => T | null | undefined,
 		timeout = 15000,
 	): Promise<T> => {
 		const start = Date.now();
 		while (Date.now() - start < timeout) {
-			const el = document.querySelector<T>(selector);
+			const el = getter();
 			if (el) return el;
 			await sleep(50);
 		}
-		throw new Error(`Element not found: ${selector}`);
+		throw new Error(`Element not found: ${getter.toString()}`);
 	};
 
 	// 1. Select model (skip when mode is unspecified, or for follow-up — model is locked to existing chat)
 	if (mode && !followUp) {
-		const itemSelector =
-			mode === "instant"
-				? SELECTORS.modelItemInstant
-				: SELECTORS.modelItemThinking;
+		const itemGetter =
+			mode === "instant" ? getters.modelItemInstant : getters.modelItemThinking;
 
-		const trigger = await waitForElement<HTMLElement>(SELECTORS.modelTrigger);
+		const trigger = await waitForElement<HTMLElement>(getters.modelTrigger);
 		trigger.click();
-		const item = await waitForElement<HTMLElement>(itemSelector);
+		const item = await waitForElement<HTMLElement>(itemGetter);
 		item.click();
 	}
 
 	// 2. Input prompt into rich-textarea / Quill editor
-	const editor = await waitForElement<HTMLElement>(SELECTORS.editor);
+	const editor = await waitForElement<HTMLElement>(getters.editor);
 	editor.focus();
 	const inserted = document.execCommand("insertText", false, prompt);
 	if (!inserted) {
@@ -57,6 +73,6 @@ export const automateGemini: AutomationFn = async ({
 
 	// 3. Send (skip when send=false; prompt is left staged in the editor)
 	if (!send) return;
-	const sendBtn = await waitForElement<HTMLButtonElement>(SELECTORS.sendButton);
+	const sendBtn = await waitForElement<HTMLButtonElement>(getters.sendButton);
 	sendBtn.click();
 };
