@@ -48,7 +48,7 @@ export const automateGemini: AutomationFn = async ({
 			if (el) return el;
 			await sleep(50);
 		}
-		throw new Error(`Element not found: ${getter.toString()}`);
+		throw new Error(`Element not found: ${getter.name}`);
 	};
 
 	// 1. Select model (skip when mode is unspecified, or for follow-up — model is locked to existing chat)
@@ -60,6 +60,7 @@ export const automateGemini: AutomationFn = async ({
 		trigger.click();
 		const item = await waitForElement<HTMLElement>(itemGetter);
 		item.click();
+		trigger.click();
 	}
 
 	// 2. Input prompt into rich-textarea / Quill editor
